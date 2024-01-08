@@ -1,12 +1,18 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { FcGoogle } from "react-icons/fc";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import useAuth from "../../hooks/useAuth";
+import toast from "react-hot-toast";
+import axios from "axios";
 
 const Signup = () => {
   const [showPass, setShowPass] = useState(false);
+  const { signInWithGoogle, setLoading, createUser, updateUserProfile } =
+    useAuth();
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -14,9 +20,57 @@ const Signup = () => {
   } = useForm();
 
   const onSubmit = (data) => {
-    console.log(data); // You can handle form submission here
+    console.log(data);
+    const firstName = data.firstName;
+    const lastName = data.lastName;
+    const fullName = `${firstName} ${lastName}`;
+    const email = data.email;
+    const password = data.password;
+    const image = data.image[0];
+    const formData = new FormData();
+    formData.append("image", image);
+    const url = `https://api.imgbb.com/1/upload?key=${
+      import.meta.env.VITE_imgbb_key
+    }`;
+    axios
+      .post(url, formData)
+      .then((data) => {
+        const imgUrl = data.data?.data?.display_url;
+        createUser(email, password)
+          .then((result) => {
+            updateUserProfile(fullName, imgUrl)
+              .then(() => {
+                toast.success("Account created successfully");
+                navigate("/dashLayout", { replace: true });
+              })
+              .catch((err) => {
+                setLoading(false);
+                toast.error(err.message);
+              });
+          })
+          .catch((err) => {
+            setLoading(false);
+            toast.error(err.message);
+          });
+      })
+      .catch((err) => {
+        setLoading(false);
+        toast.error(err.message);
+      });
   };
-  const handleGoogleSignIn = () => {};
+  const handleGoogleSignIn = () => {
+    signInWithGoogle()
+      .then((result) => {
+        console.log(result);
+        toast.success("Account created successfully!");
+        navigate("/dashLayout", { replace: true });
+      })
+      .catch((err) => {
+        setLoading(false);
+        console.log(err.message);
+      });
+  };
+
   return (
     <>
       <div className="form-bg flex flex-col text-white rounded-xl my-12 px-6 py-4 space-y-2 tracking-wider w-2/5 mx-auto">
@@ -25,7 +79,7 @@ const Signup = () => {
         </h2>
 
         <form
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit)}
           className="space-y-6 ng-untouched ng-pristine ng-valid"
         >
           <div className="space-y-4">
@@ -132,7 +186,6 @@ const Signup = () => {
           <Link to="/" className="text-pink-500 hover:underline">
             Sign In
           </Link>
-          .
         </p>
       </div>
     </>

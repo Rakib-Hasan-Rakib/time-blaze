@@ -6,7 +6,7 @@ const Home = () => {
   return (
     <>
       <Container>
-        <div className="flex flex-col lg:flex-row justify-center items-center">
+        <div className="flex flex-col lg:flex-row justify-center items-center my-16 md:my-12 lg:my-4">
           <div className="basis-2/3">
             <Banner />
           </div>

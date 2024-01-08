@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-
+import useAuth from "../../hooks/useAuth";
+import toast from "react-hot-toast";
 
 const Signin = () => {
-    const [showPass, setShowPass] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const { signInWithGoogle, setLoading, signIn } = useAuth();
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -14,9 +17,30 @@ const Signin = () => {
   } = useForm();
 
   const onSubmit = (data) => {
-    console.log(data); // You can handle form submission here
+    const email = data.email;
+    const password = data.password;
+    signIn(email, password)
+      .then((result) => {
+        console.log(result.user);
+        navigate("/dashLayout", { replace: true });
+      })
+      .catch((err) => {
+        setLoading(false);
+        toast.error(err.message);
+      });
   };
-  const handleGoogleSignIn = () => {};
+  const handleGoogleSignIn = () => {
+    signInWithGoogle()
+      .then((result) => {
+        console.log(result);
+        toast.success("Successfully logged in!");
+        navigate("/dashLayout", { replace: true });
+      })
+      .catch((err) => {
+        setLoading(false);
+        console.log(err.message);
+      });
+  };
   return (
     <>
       <div className="form-bg flex flex-col text-white rounded-xl my-12 px-6 py-4 space-y-2 tracking-wider">
@@ -25,7 +49,7 @@ const Signin = () => {
         </h2>
 
         <form
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit)}
           className="space-y-6 ng-untouched ng-pristine ng-valid"
         >
           <div className="space-y-4">
@@ -102,7 +126,6 @@ const Signin = () => {
           <Link to="/signup" className="text-pink-500 hover:underline">
             Sign Up
           </Link>
-          .
         </p>
       </div>
     </>
